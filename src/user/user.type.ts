@@ -9,3 +9,7 @@ export type AuthCreateInput = {
     email: string;
     password: string;
   };
+  export enum STATUS {
+    success= "SUCCESS",
+    failed= "FAILED"
+  }

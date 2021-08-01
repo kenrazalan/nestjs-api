@@ -2,7 +2,7 @@ import { Users } from './user.entity';
 import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthCreateInput, AuthLoginInput } from './user.type';
+import { AuthCreateInput, AuthLoginInput, STATUS } from './user.type';
 const bcrypt = require('bcrypt')
 
 @Injectable()
@@ -15,25 +15,22 @@ export class UserService {
     const { fullname, email, dob, password } = params
     if (!fullname || !email || !dob || !password) {
       throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
+        status: STATUS.failed,
         message: "Empty Input Fields",
-        error: "Failed"
       }, HttpStatus.NOT_FOUND);
     }
     else if (!new Date(dob).getTime()) {
       throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
+        status: STATUS.failed,
         message: "Invalid Date",
-        error: "Failed"
       }, HttpStatus.NOT_FOUND);
     }
     else {
       const user = await this.UserRepo.findOne({ where: { email } })
       if (user) {
         throw new HttpException({
-          status: HttpStatus.NOT_FOUND,
+          status: STATUS.failed,
           message: "Email already registered.",
-          error: "Failed"
         }, HttpStatus.NOT_FOUND);
       }
       else {
@@ -57,18 +54,16 @@ export class UserService {
     password = password.trim()
     if ( !email || !password) {
       throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
+        status: STATUS.failed,
         message: "Please provide email or password",
-        error: "Failed"
       }, HttpStatus.NOT_FOUND);
     }
     else {
       const user = await this.UserRepo.findOne({ where: { email } })
       if (!user) {
         throw new HttpException({
-          status: HttpStatus.NOT_FOUND,
+          status: STATUS.failed,
           message: "Email not found.",
-          error: "Failed"
         }, HttpStatus.NOT_FOUND);
       }
       else {
@@ -76,7 +71,19 @@ export class UserService {
         const result = await bcrypt.compare(password, hashedPassword)
         if(result) {
           user.password = undefined
-          return user
+          return {
+            user,
+            status: STATUS.success,
+            message: "Login Success"
+          }
+        }
+        else {
+
+            throw new HttpException({
+              status: STATUS.failed,
+              message: "Email or password incorrect.",
+            }, HttpStatus.NOT_FOUND);
+          
         }
       }
     }
