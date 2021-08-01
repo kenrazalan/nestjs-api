@@ -1,8 +1,9 @@
 import { Users } from './user.entity';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthCreateInput } from './user.type';
+const bcrypt = require('bcrypt')
 
 @Injectable()
 export class UserService {
@@ -12,24 +13,45 @@ export class UserService {
   async create(params: AuthCreateInput): Promise<Users> {
     const { fullname, email, dob, password } = params
     if (!fullname || !email || !dob || !password) {
-      throw new HttpException('Empty Input', HttpStatus.BAD_REQUEST);
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        message: "Empty Input Fields",
+        error: "Failed"
+      }, HttpStatus.NOT_FOUND);
     }
     else if (!new Date(dob).getTime()) {
-      throw new HttpException(' Invalid Date', HttpStatus.BAD_REQUEST);
-    } else {
-      const User = await this.UserRepo.find({email})
-      console.log(User)
-      // if(User.length){
-      //     throw new HttpException('Email already taken', HttpStatus.BAD_REQUEST);
-      // }
-      const episode = this.UserRepo.create(params);
-      return episode.save();
 
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        message: "Invalid Date",
+        error: "Failed"
+      }, HttpStatus.NOT_FOUND);
+
+    } else {
+      const user = await this.UserRepo.findOne({ where: { email } })
+      if (user) {
+        throw new HttpException({
+          status: HttpStatus.NOT_FOUND,
+          message: "Email already registered.",
+          error: "Failed"
+        }, HttpStatus.NOT_FOUND);
+      } else {
+        const saltRounds = 10;
+
+        const hashedPassword = await bcrypt.hash(password, saltRounds)
+
+        const episode = this.UserRepo.create({
+          ...params,
+          password: hashedPassword
+        });
+
+        return episode.save();
+      }
     }
   }
   async findByEmail(email: string): Promise<Users> {
     try {
-      const user = await this.UserRepo.findOne({where: {email}})
+      const user = await this.UserRepo.findOne({ where: { email } })
       return user
     } catch (error) {
       throw error;

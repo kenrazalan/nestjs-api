@@ -8,10 +8,14 @@ export class UserController {
   constructor(private authService: UserService) { }
   @Post()
   async create(@Body() body: AuthCreateInput, @Res() res: Response) {
-  const user = await this.authService.findByEmail(body.email)
-    if (user) {
-      throw new HttpException('Email already registered.', HttpStatus.BAD_REQUEST);
-    }
+  // const user = await this.authService.findByEmail(body.email)
+  //   if (user) {
+  //     throw new HttpException({
+  //       status: HttpStatus.NOT_FOUND,
+  //       message: "Email already registered.",
+  //       error: "Failed"
+  //     },HttpStatus.NOT_FOUND);
+  //   }
     const newAuth = await this.authService.create(body);
     res.json(newAuth);
   }
