@@ -4,3 +4,8 @@ export type AuthCreateInput = {
     dob: Date;
     password: string;
   };
+
+  export type AuthLoginInput = {
+    email: string;
+    password: string;
+  };

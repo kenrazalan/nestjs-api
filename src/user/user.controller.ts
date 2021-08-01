@@ -1,22 +1,22 @@
 import { UserService } from './user.service';
 import { Body, Controller, Get, HttpException, Param, Post, Res, HttpStatus } from '@nestjs/common';
-import { AuthCreateInput } from './user.type';
+import { AuthCreateInput, AuthLoginInput } from './user.type';
 import { Response } from 'express';
 
 @Controller('user')
 export class UserController {
   constructor(private authService: UserService) { }
-  @Post()
+  @Post('signup')
   async create(@Body() body: AuthCreateInput, @Res() res: Response) {
-  // const user = await this.authService.findByEmail(body.email)
-  //   if (user) {
-  //     throw new HttpException({
-  //       status: HttpStatus.NOT_FOUND,
-  //       message: "Email already registered.",
-  //       error: "Failed"
-  //     },HttpStatus.NOT_FOUND);
-  //   }
+
     const newAuth = await this.authService.create(body);
+    res.json(newAuth);
+  }
+
+  @Post('login')
+  async login(@Body() body: AuthLoginInput, @Res() res: Response) {
+
+    const newAuth = await this.authService.login(body);
     res.json(newAuth);
   }
 
